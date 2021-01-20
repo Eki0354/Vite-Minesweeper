@@ -8,6 +8,8 @@
     @triggerSound="triggerSound"
     @showScoreRank="showScoreRank"
     @exit="exitWindow"
+    @setsume="setsume"
+    @about="about"
   >
   </MenuBar>
   <div class="panel" :class="config.colorful || 'gray-filter'" :style="`width: ${gameType.x * 32 + 4}px;`">
@@ -284,6 +286,34 @@ export default {
       setConfig(config.value);
     }
 
+    // 说明
+    const setsume = () => {
+      setTimeout(() => {
+        const list = [];
+        list.push('\n操作说明：\n');
+        list.push('1. 点击“菜单-游戏-开局”或者 笑脸 图标可重置对局。');
+        list.push('2. 左键单击展开格子。');
+        list.push('3. 右键单击在“正常-地雷-不确定”三种状态之间切换，');
+        list.push('    菜单项取消选中“显示<?>标记”时不切换至“不确定”项。');
+        alert(list.join('\n'));
+      }, 0);
+    }
+
+    // 关于
+    const about = () => {
+      setTimeout(() => {
+        const list = [];
+        list.push('\n关于：\n');
+        list.push('1. 依照原版扫雷的计数器和笑脸风格设计。');
+        list.push('2. 修复原版扫雷的两个Bug：');
+        list.push('    a. 取消选中“显示<?>标记”时无法点击之前已标记为地雷的格子；');
+        list.push('    b. 已标记地雷的计数器在小于-99后会从-1开始重新计数；');
+        list.push('3. “声音”菜单项未实现');
+        list.push('4. 灰度实现效果不完美，需要用深度穿透样式进行调整。');
+        alert(list.join('\n'));
+      }, 0);
+    }
+
     reset(); // 初始化
 
     return {
@@ -303,7 +333,9 @@ export default {
       triggerColorFilter,
       triggerSound,
       showScoreRank,
-      exitWindow
+      exitWindow,
+      setsume,
+      about
     };
   }
 }

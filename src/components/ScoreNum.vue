@@ -1,23 +1,43 @@
 <template>
   <div class="score-num">
     <template v-for="(item, i) in list">
-      <div :class="`score-num-leg leg-${i}`" v-if="item"></div>
+      <div :class="`score-num-piece piece-${i}${item ? '' : ' piece-shadow'}`"></div>
     </template>
   </div>
 </template>
 
 <script>
-import { computed } from 'vue';
+import { toRefs, computed } from 'vue';
 export default {
   name: 'ScoreNum',
-  setup (props, { attrs: { value } }) {
-    const reflectKeys = [63, 6, 91, 79, 102, 109, 125, 7, 127, 111];
-    let v = reflectKeys[value];
-    const list = computed(() => Array(7).fill(2).map((n, i) => v >= n ** (6 - i) && (!!(v -= n ** (6 - i)) || true)).reverse());
+  props: ['value'],
+  setup (props, ctx) {
+    const { value } = toRefs(props);
+    const reflectKeys = {
+      0: 63,
+      1: 6,
+      2: 91,
+      3: 79,
+      4: 102,
+      5: 109,
+      6: 125,
+      7: 7,
+      8: 127,
+      9: 111,
+      '-': 64
+    };
+    const list = computed(() => {
+      let v = reflectKeys[value.value];
+      return Array(7)
+              .fill(2)
+              .map((n, i) => {
+                const base = n ** (6 - i);
+                return v >= base && (!!(v -= base) || true);
+              })
+              .reverse();
+    });
 
-    return {
-      list
-    }
+    return { list };
   }
 }
 </script>
@@ -28,22 +48,32 @@ export default {
   width: 20px;
   height: 40px;
 }
-.score-num-leg {
+
+.score-num-piece {
   position: absolute;
   width: 20px;
   height: 4px;
   background-color: #f00;
-  clip-path: polygon(10% 0%, 90% 0%, 65% 100%, 35% 100%);
+  clip-path: polygon(
+    10% 0%,
+    90% 0%,
+    65% 100%,
+    35% 100%
+  );
+}
+
+.score-num-piece.piece-shadow {
+  background-color: rgba(255, 0, 0, .24);
 }
 
 /* 上 */
-.leg-0 {
+.piece-0 {
   top: 0;
   left: 0;
 }
 
 /* 右上 */
-.leg-1 {
+.piece-1 {
   top: 0;
   right: -20px;
   transform-origin: 0% 0%;
@@ -51,7 +81,7 @@ export default {
 }
 
 /* 右下 */
-.leg-2 {
+.piece-2 {
   top: 20px;
   right: -20px;
   transform-origin: 0% 0%;
@@ -59,28 +89,35 @@ export default {
 }
 
 /* 下 */
-.leg-3 {
+.piece-3 {
   top: 35px;
   transform: rotateZ(180deg);
 }
 
 /* 左下 */
-.leg-4 {
+.piece-4 {
   top: 40px;
   transform-origin: 0% 0%;
   transform: rotateZ(270deg);
 }
 
 /* 左上 */
-.leg-5 {
+.piece-5 {
   top: 20px;
   transform-origin: 0% 0%;
   transform: rotateZ(270deg);
 }
 
 /* 中 */
-.leg-6 {
+.piece-6 {
   top: 18px;
-  clip-path: polygon(25% 0%, 75% 0%, 90% 50%, 75% 100%, 25% 100%, 10% 50%);
+  clip-path: polygon(
+    25% 0%,
+    75% 0%,
+    90% 50%,
+    75% 100%,
+    25% 100%,
+    10% 50%
+  );
 }
 </style>

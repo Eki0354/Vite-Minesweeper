@@ -56,7 +56,7 @@ export default {
   position: relative;
 }
 
-.mine.checked {
+.mine.checked, .mine.active {
   border-color: #888;
   border-bottom-width: 0;
   border-right-width: 0;

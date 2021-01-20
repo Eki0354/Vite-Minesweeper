@@ -98,34 +98,37 @@ export default {
         const item = list[index + m + n];
         if (!item || item.value < 0 || item.checked) return;
         item.checked = true;
+        item.flag === 1 && leftMines.value++;
+        item.flag = 0;
         if (!item.value) chainReaction(list, index + m + n, x);
       }));
     }
 
     const mousedownHandle = (e, index) => {
-      if (gameState.value === 2) return;
-      if (e.button === 0) smileState.value = 1;
+      if (gameState.value === 2 || e.button !== 0) return;
+      smileState.value = 1;
+      activeMine(index);
     }
 
     const mouseupHandle = (e, index) => {
       if (gameState.value === 2) return;
       if (e.button === 0) { // 左键
         if (gameState.value === 0) gameState.value = 1; // 首次点击并弹起后才算开始游戏
-        if (~activeIndex) mineList.value[activeIndex].active = false; // 清除上一个响应格子
-        activeIndex = index;
-        mineList.value[activeIndex].active = true;
-        if (~mineList.value[index].value) {
+        activeMine(index);
+        if (~mineList.value[index].value) { // 非地雷格
           const item = mineList.value[index];
           if (item.checked) return; // 已查看的格子不再响应
           item.checked = true;
           item.active = true;
+          item.flag === 1 && leftMines.value++;
+          item.flag = 0;
           smileState.value = 0;
-          if (item.value) return; // 非零雷格子不进行链式展开
-          chainReaction(mineList.value, index, gameType.value.x);
-        } else {
-          mineList.value.forEach(i => ~i.value || (i.checked = true));
-          gameState.value = 2;
-          smileState.value = 2;
+          // 非零雷格子不进行链式展开
+          if (!item.value) chainReaction(mineList.value, index, gameType.value.x);
+          if (!isGameFinished()) return; // 检测游戏是否完成
+          gameSucceed(); // 检测通过时，只可能是成功，右键时同理。
+        } else { // 地雷格
+          gameFailed();
         }
       } else if (e.button === 2) { // 右键
         const item = mineList.value[index];
@@ -135,17 +138,44 @@ export default {
         if (item.flag === 0 && leftMines.value <= -99) return;
         item.flag = (item.flag + 1) % 3;
         if (item.flag === 1) leftMines.value--;
+        if (!isGameFinished()) return;
+        gameSucceed();
       }
     }
 
     const mouseenterHandle = (e, index) => {
-      if (gameState.value === 2) return;
-      activeIndex = index;
+      if (gameState.value === 2 || smileState.value !== 1) return;
+      activeMine(index);
     }
 
     const mouseleaveHandle = (e, index) => {
-      if (gameState.value === 2) return;
-      activeIndex = -1;
+      if (gameState.value === 2 || smileState.value !== 1) return;
+      activeMine(-1);
+    }
+
+    // 激活某个方块，用于指明当前鼠标作用的位置。
+    const activeMine = index => {
+      if (~activeIndex) mineList.value[activeIndex].active = false; // 清除上一个响应格子
+      activeIndex = index;
+      if (~index) mineList.value[index].active = true;
+    }
+
+    const isGameFinished = () => {
+      const validCount = mineList.value.reduce((p, c) => p + +(c.checked || (c.flag === 1 && !~c.value)), 0);
+      const { x, y } = gameType.value;
+      return validCount === x * y;
+    }
+
+    const gameFailed = () => {
+      mineList.value.forEach(i => ~i.value || (i.checked = true)); // 展开所有地雷格
+      gameState.value = 2;
+      smileState.value = 2;
+    }
+
+    const gameSucceed = () => {
+      console.log('yes')
+      gameState.value = 2;
+      smileState.value = 3;
     }
 
     reset(); // 初始化

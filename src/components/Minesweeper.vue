@@ -30,11 +30,12 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import ScoreItem from './ScoreItem.vue';
 import SmileFace from './SmileFace.vue';
 import Mine from './Mine.vue';
 import { GAME_TYPES } from '../constant.js';
+import { getRecords, setRecords } from '../util.js';
 export default {
   name: 'Minesweeper',
   components: {
@@ -43,16 +44,21 @@ export default {
     Mine
   },
   setup (props, ctx) {
-    const gameType = ref(GAME_TYPES[0]);
+    const level = ref(0);
+    const gameType = computed(() => GAME_TYPES[level.value]);
     const mineList = ref([]);
     const leftMines = ref(0);
     const smileState = ref(0);
     const currentScore = ref(0);
     // 游戏进行状态：0-已初始化；1-正在进行；2-结束；
     const gameState = ref(0);
+    const records = getRecords();
     let activeIndex = -1;
+    let timer = null;
+    let startTime = 0;
 
     const reset = e => {
+      timer && clearInterval(timer);
       const { x, y, mines } = gameType.value;
       mineList.value = createMineList(x, y, mines);
       leftMines.value = mines;
@@ -112,8 +118,14 @@ export default {
 
     const mouseupHandle = (e, index) => {
       if (gameState.value === 2) return;
+      smileState.value = 0; // 重置表情，此值也用于判定移动检测，非常重要！
       if (e.button === 0) { // 左键
-        if (gameState.value === 0) gameState.value = 1; // 首次点击并弹起后才算开始游戏
+        if (gameState.value === 0) { // 首次点击并弹起后才算开始游戏
+          gameState.value = 1;
+          startTime = new Date();
+          // 原版扫雷计时从1开始
+          timer = setInterval(() => currentScore.value = Math.ceil((new Date() - startTime) / 1000), 50);
+        }
         activeMine(index);
         if (~mineList.value[index].value) { // 非地雷格
           const item = mineList.value[index];
@@ -122,7 +134,6 @@ export default {
           item.active = true;
           item.flag === 1 && leftMines.value++;
           item.flag = 0;
-          smileState.value = 0;
           // 非零雷格子不进行链式展开
           if (!item.value) chainReaction(mineList.value, index, gameType.value.x);
           if (!isGameFinished()) return; // 检测游戏是否完成
@@ -161,21 +172,39 @@ export default {
     }
 
     const isGameFinished = () => {
-      const validCount = mineList.value.reduce((p, c) => p + +(c.checked || (c.flag === 1 && !~c.value)), 0);
+      const validCount = mineList.value.reduce((p, c) => p + +(c.checked || !~c.value), 0);
       const { x, y } = gameType.value;
       return validCount === x * y;
     }
 
     const gameFailed = () => {
+      clearInterval(timer);
       mineList.value.forEach(i => ~i.value || (i.checked = true)); // 展开所有地雷格
       gameState.value = 2;
       smileState.value = 2;
     }
 
     const gameSucceed = () => {
-      console.log('yes')
+      clearInterval(timer);
       gameState.value = 2;
       smileState.value = 3;
+      mineList.value.forEach(_ => ~_.value || (_.flag = 1));
+      leftMines.value = 0;
+      setTimeout(() => { // 等待页面渲染响应
+        if (currentScore.value >= records[level.value][1]) return;
+        let name = prompt(`已破${gameType.value.title}记录！\n请留下尊姓大名：`, '匿名');
+        name = name && name.trim();
+        if (!name) return;
+        records[level.value] = [name, currentScore.value];
+        setRecords(records);
+        showScoreRank();
+      }, 0);
+    }
+
+    const showScoreRank = () => {
+      let str = "扫雷英雄榜：";
+      str += records.map((s, i) => `${GAME_TYPES[i].title}： ${('00' + s[1]).slice(-3)} 秒       ${s[0]}`).join('\n');
+      alert(str);
     }
 
     reset(); // 初始化

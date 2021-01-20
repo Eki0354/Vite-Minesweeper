@@ -105,7 +105,7 @@ export default {
   box-shadow: 4px 4px 0 8px #000;
 }
 
-.mine.real.active {
+.mine.checked.real.active {
   background-color: #f00;
 }
 

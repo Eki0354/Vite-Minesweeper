@@ -17,7 +17,11 @@ export default {
   props: ['value'],
   setup (props, ctx) {
     const { value: v } = toRefs(props);
-    const list = computed(() => ((v.value < 0 ? '-' : '0') + ('00' + Math.abs(v.value)).slice(-2)).split(''));
+    const list = computed(() => {
+      const list = ('000' + Math.abs(v.value)).slice(-3).split('');
+      if (v.value < 0) list[0] = '-';
+      return list;
+    });
 
     return { list };
   }

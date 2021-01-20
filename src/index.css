@@ -32,18 +32,6 @@ ul, li {
   border-right-color: #888;
 }
 
-.width292 {
-  width: 292px;
-}
-
-.width516 {
-  width: 516px;
-}
-
-.width964 {
-  width: 964px;
-}
-
 .color-1 {
   color: #00f;
 }
@@ -74,4 +62,8 @@ ul, li {
 
 .color-8 {
   color: #777;
+}
+
+.gray-filter {
+  filter: grayscale(100%);
 }
